@@ -3,6 +3,9 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../features/auth";
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { supabase, SUPABASE_ANON_KEY, SUPABASE_URL } from "../lib/supabase";
 
 
 export default function Login() {
@@ -15,6 +18,21 @@ export default function Login() {
             return router.push(`/verify-passcode?email=${result.email}`)
         } if (result && 'phone' in result) {
             return router.push(`/verify-passcode?phone=${result.phone}`)
+        }
+        if (result && 'sso' in result) {
+            const authResponse = await WebBrowser.openAuthSessionAsync(`${result.sso}&prompt=login`);
+            if (authResponse.type === 'success') {
+                const parsedResponse = new URL(authResponse.url)
+                const error = parsedResponse.searchParams.get('error')
+                if (error) {
+                    const error_description = parsedResponse.searchParams.get('error_description')
+                    console.log({ error, error_description })
+
+                }
+                const access_token = parsedResponse.searchParams.get('access_token') || ''
+                const refresh_token = parsedResponse.searchParams.get('refresh_token') || ''
+                await supabase.auth.setSession({ access_token, refresh_token })
+            }
         }
 
     }

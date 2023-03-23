@@ -46,7 +46,7 @@ const getFiles = async (filePath: string) => {
 }
 
 const useFiles = (filePath: string, options: {}) => {
-    return useQuery([filePath], () => getFiles(filePath), { staleTime: 1000 * 60 * 60 * 24, ...options })
+    return useQuery([filePath], () => getFiles(filePath), { ...options })
 }
 
 export default useFiles

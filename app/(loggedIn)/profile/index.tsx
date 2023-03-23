@@ -14,24 +14,39 @@ export default function Profile() {
         Alert.alert('Sign Out', 'Are you sure?', [{ text: 'Yes', onPress: () => { logout() } }, { text: 'No' }])
     }
     const { subscriber, handleSubscribe } = useNotifications()
-    const [name, setName] = useState('')
-    const [emailAlerts, setEmailAlerts] = useState(true)
-    const [phoneAlerts, setPhoneAlerts] = useState(true)
-    const [appAlerts, setAppAlerts] = useState(true)
-    const [isChanged, setIsChanged] = useState(false)
-    const { isLoading, isError, data: profile } = useQuery(['user'], async () => {
-        const { data, error } = await supabase.from('users').select('*').eq('id', user?.id).single()
-        if (error) throw error
-        return data
-    }, {})
+    // const [name, setName] = useState('')
+    // const [emailAlerts, setEmailAlerts] = useState(true)
+    // const [phoneAlerts, setPhoneAlerts] = useState(true)
+    // const [appAlerts, setAppAlerts] = useState(true)
+    // const [isChanged, setIsChanged] = useState(false)
+    // const { isLoading, isError, data: profile } = useQuery(['user'], async () => {
+    //     const { data, error } = await supabase.from('users').select('*').eq('id', user?.id).single()
+    //     if (error) throw error
+    //     return data
+    // }, {})
     console.log({ accessToken })
-    return <ScrollView className="p-2">
+    return <View className="p-2">
         <View className="flex-row items-center">
             <MaterialCommunityIcons name="account-circle" size={36} color="black" />
             <Text className="ml-1 text-2xl">My Profile</Text>
         </View>
-        <Text>{JSON.stringify({ profile }, null, 2)}</Text>
+        <View className="flex-row items-center">
+            <Pressable className="flex-row items-center border-2 border-orange-500 p-2 rounded m-2" onPress={() => handleSubscribe()}>
 
+                <MaterialCommunityIcons name="bell" size={32} color="rgb(249 115 22)" />
+                <Text className=" text-orange-500 text-xl">Enable Notifications</Text>
+            </Pressable>
+
+            <Pressable className="flex-row items-center border-red-500 border p-2" onPress={handleLogout}>
+                <MaterialCommunityIcons name="logout" size={32} color="red" />
+                <Text className="text-lg text-red-500">Sign Out</Text>
+            </Pressable>
+
+        </View>
+        <ScrollView>
+            <Text>{JSON.stringify({ user }, null, 2)}</Text>
+        </ScrollView>
+        {/* 
         <View className="rounded border my-1 focus:border-orange-500 p-1 w-full">
             <Text>Full Name</Text>
             <TextInput
@@ -81,11 +96,10 @@ export default function Profile() {
         <Pressable onPress={() => { setAppAlerts(value => !value) }} className="flex-row items-center py-1">
             <Text className="text-lg mr-auto">In-App</Text>
             <Switch value={appAlerts} />
-        </Pressable>
+        </Pressable> */}
 
-        <Pressable className="border-red-500 border p-2" onPress={handleLogout}>
-            <Text className="text-lg text-red-500">Sign Out</Text>
-        </Pressable>
+
+
         {/* <View className="items-center flex-row p-2 bg-green-200 w-full">
             <MaterialCommunityIcons name="check-circle-outline" size={32} style={{ marginRight: 2 }} color="green" />
             <Text className="text-2xl">Notifications are Enabled</Text>
@@ -98,12 +112,8 @@ export default function Profile() {
             <MaterialCommunityIcons name="alert-circle-outline" size={32} style={{ marginRight: 2 }} color="red" />
             <Text className="text-2xl">Notifications are Disabled</Text>
         </View> */}
-        {/* <MaterialCommunityIcons name="bell" size={96} color="rgb(209 213 219)" />
-        <Text className="text-xl">Notifications</Text>
-        <Pressable className="border-2 border-orange-500 p-2 rounded m-2" onPress={() => handleSubscribe()}>
-            <Text className=" text-orange-500 text-xl">Enable Notifications</Text>
-        </Pressable>
+        {/* 
         <Text>{JSON.stringify({ subscriber })}</Text>
         <Text>{JSON.stringify(user, null, 2)}</Text> */}
-    </ScrollView>
+    </View>
 }

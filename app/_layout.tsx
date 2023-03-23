@@ -9,11 +9,13 @@ import { addNotificationResponseReceivedListener, setNotificationHandler, useLas
 import * as Device from 'expo-device'
 import * as ScreenOrientation from 'expo-screen-orientation'
 
+// import '../styles.css'
 
 const Globals = createContext<{ isFullScreen: boolean, setIsFullScreen: (newValue: boolean) => void } | undefined>(undefined)
 
 const GlobalProvider = ({ children }: { children: JSX.Element }) => {
     const [isFullScreen, setIsFullScreen] = useState(false)
+
     return <Globals.Provider value={{ isFullScreen, setIsFullScreen }}>{children}</Globals.Provider>
 }
 

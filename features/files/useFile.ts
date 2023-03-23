@@ -21,6 +21,6 @@ const getFile = async (filePath: string) => {
 }
 
 const useFile = (filePath: string) => {
-    return useQuery(filePath.split('/'), () => getFile(filePath), { staleTime: 1000 * 60 * 60 * 24, placeholderData: [] })
+    return useQuery(filePath.split('/'), () => getFile(filePath))
 }
 export default useFile

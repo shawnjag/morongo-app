@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { usePathname, useRouter, useSegments } from "expo-router";
-import { supabase } from "../../lib/supabase";
 import { User } from "@supabase/supabase-js";
+import { useGlobal } from "../../app/_layout";
+import { supabase } from "../../lib/supabase";
 
 
 type Auth = {
@@ -10,7 +11,7 @@ type Auth = {
     user: User | null,
     accessToken: string,
     error: string,
-    requestPasscode: (user: string) => Promise<{ email: string } | { phone: string } | void>,
+    requestPasscode: (user: string) => Promise<{ email: string } | { phone: string } | { sso: string } | void>,
     verifyPasscode: ({ email, phone, token }: {
         email: string,
         token: string,
@@ -38,11 +39,18 @@ function AuthProvider({ children }: { children: JSX.Element }) {
         const phoneRegEx = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/
         if (emailRegEx.test(user)) {
 
-            // const domain = user.split('@')[1]
-            // if (domain && SSO_DOMAINS.includes(domain)) {
-            //     const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'azure', options: { redirectTo: `morongo:///callback` } })
-            //     return { sso: data.url }
-            // }
+            const domain = user.split('@')[1]
+            if (domain && SSO_DOMAINS.includes(domain)) {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'azure',
+                    options: {
+                        scopes: 'email',
+                        redirectTo: 'morongo://callback',
+                    }
+                })
+                console.log({ data })
+                if (data.url) return { sso: data.url }
+            }
             const email = user
             const { data, error } = await supabase.auth.signInWithOtp({
                 email, options: {
@@ -67,56 +75,40 @@ function AuthProvider({ children }: { children: JSX.Element }) {
         setError('')
         if (email) {
             const { data: { user, session }, error } = await supabase.auth.verifyOtp({ email, token, type: 'magiclink' })
-            if (user) {
-                setUser(user)
-            }
-            if (session) {
-                setAccessToken(session.access_token)
-            }
             if (error) return setError(error.message)
             return
         }
         else if (phone) {
 
             const { data: { user, session }, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
-            if (user) {
-                setUser(user)
-            }
-            if (session) {
-                setAccessToken(session.access_token)
-            }
             if (error) return setError(error.message)
             return
 
         }
         else return setError('Unable to verify passcode')
     }
+    useEffect(() => {
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log({ event })
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                setUser(session?.user ?? null)
+                setAccessToken(session?.access_token ?? '')
+            }
+            if (event === 'SIGNED_OUT') {
+                setUser(null)
+                setAccessToken('')
+            }
+
+
+        })
+
+    }, [])
 
     const logout = async () => {
         const { error } = await supabase.auth.signOut()
-
-        if (!error) {
-            setUser(null)
-            setAccessToken('')
-        }
-
-
-    }
-    const restoreSession = async () => {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        if (session) {
-            setUser(session.user)
-            setAccessToken(session.access_token)
-
-        }
-        if (error) {
-            setUser(null)
-
-            setAccessToken('')
-        }
     }
     useEffect(() => {
-        restoreSession().then(() => {
+        supabase.auth.getSession().then(() => {
             setisLoading(false)
         })
 

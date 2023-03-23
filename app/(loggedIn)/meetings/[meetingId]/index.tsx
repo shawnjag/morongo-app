@@ -1,6 +1,6 @@
 import { Link, useNavigation, useRouter, useSearchParams } from 'expo-router'
 import { Text, View, TouchableOpacity, Touchable, Pressable, Switch, TextInput, useWindowDimensions } from 'react-native'
-import { useQuery } from 'react-query'
+import { useQuery, useQueryClient } from 'react-query'
 import { supabase } from '../../../../lib/supabase'
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
@@ -28,6 +28,7 @@ export default function ViewMeeting() {
     console.log({ width })
     const isTablet = width >= 768
     const [activeTab, setActiveTab] = useState(0)
+    const queryClient = useQueryClient()
     const searchParams = useSearchParams()
     const { accessToken } = useAuth()
     const meetingId = Number(searchParams.meetingId)
@@ -36,7 +37,7 @@ export default function ViewMeeting() {
     const meetingDate = meeting && 'date' in meeting && meeting.date ? format(new Date(meeting.date + 'T00:00:00'), 'MMddyy') : ''
     const { error: attachmentsError, isError: errorLoadingAttachments, isLoading: loadingAttachments, data: attachments } = useFiles(`meetings/edpc/${meetingDate}`, { enabled: meetingDate.length > 0 })
 
-
+    const { isFullScreen, setIsFullScreen } = useGlobal()
     const router = useRouter()
 
     if (loadingMeeting || loadingAttachments) return <View>
@@ -55,7 +56,7 @@ export default function ViewMeeting() {
         : []
 
     const filePath = tabs && tabs.length && tabs[activeTab] ? `meetings/edpc/${meetingDate}/${tabs[activeTab]}.pdf` : ''
-    const { isFullScreen, setIsFullScreen } = useGlobal()
+
 
     return <View className="w-full p-2 md:flex-1">
         <View className="flex-row items-center p-2">
@@ -88,7 +89,7 @@ export default function ViewMeeting() {
                             console.log(`Current page: ${page}`);
                         }}
                         onError={(error) => {
-                            console.log(error);
+                            queryClient.invalidateQueries(`meetings/edpc/${meetingDate}`)
                         }}
                         onPressLink={(uri) => {
                             console.log(`Link pressed: ${uri}`);
@@ -96,6 +97,7 @@ export default function ViewMeeting() {
                     // style={{ flex: 1, width, height }}
                     />
                 </View>
+
             </View>
             : null}
 
